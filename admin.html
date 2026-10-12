@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>辣巷子｜老闆後台</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#f5f1eb;
+  color:#222;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
+}
+header{
+  background:linear-gradient(135deg,#450000,#a00000,#c71919);
+  color:white;
+  padding:22px 16px;
+}
+header h1{margin:0;font-size:24px}
+header p{margin:6px 0 0;opacity:.85}
+
+.wrap{
+  max-width:900px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:white;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 3px 15px #0001;
+}
+.login{
+  max-width:500px;
+  margin:60px auto;
+}
+input,select,button{
+  width:100%;
+  padding:13px;
+  border-radius:11px;
+  font-size:16px;
+}
+input,select{
+  border:1px solid #ddd;
+  background:white;
+}
+button{
+  border:0;
+  background:#b5121b;
+  color:white;
+  font-weight:bold;
+  margin-top:10px;
+}
+.dark{background:#222}
+.gray{background:#777}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.toolbar{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+}
+.item{
+  border:1px solid #eee;
+  border-radius:15px;
+  padding:14px;
+  margin-top:10px;
+}
+.itemtop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.name{
+  font-size:18px;
+  font-weight:800;
+}
+.price{
+  color:#b5121b;
+  font-weight:800;
+  white-space:nowrap;
+}
+.desc{
+  color:#888;
+  font-size:13px;
+  margin-top:5px;
+}
+.tag{
+  display:inline-block;
+  background:#e8f7e8;
+  color:#168016;
+  padding:3px 7px;
+  border-radius:20px;
+  font-size:12px;
+  margin-left:5px;
+}
+.off{
+  background:#eee;
+  color:#888;
+}
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.category{
+  font-size:21px;
+  font-weight:800;
+  margin:22px 0 8px;
+}
+.hidden{display:none}
+.msg{
+  margin-top:10px;
+  line-height:1.5;
+}
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#0008;
+  z-index:20;
+  align-items:flex-end;
+}
+.modalbox{
+  background:white;
+  width:100%;
+  max-width:600px;
+  margin:auto;
+  border-radius:22px 22px 0 0;
+  padding:18px;
+  max-height:90vh;
+  overflow:auto;
+}
+.field{
+  margin:10px 0;
+}
+.field label{
+  display:block;
+  color:#666;
+  font-size:13px;
+  margin-bottom:5px;
+}
+.check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:15px 0;
+}
+.check input{
+  width:20px;
+  height:20px;
+}
+
+@media(max-width:520px){
+  .row{grid-template-columns:1fr}
+  .toolbar{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="wrap">
+<h1>🔥 辣巷子｜老闆後台</h1>
+<p>菜單管理・直接同步菜單資料</p>
+</div>
+</header>
+
+<main class="wrap">
+
+<!-- 登入 -->
+<section id="loginCard" class="card login">
+
+<h2>🔐 老闆登入</h2>
+
+<p>請輸入 8 位數 PIN</p>
+
+<input
+ id="pin"
+ type="password"
+ inputmode="numeric"
+ maxlength="8"
+ placeholder="輸入 PIN">
+
+<button onclick="login()">進入後台</button>
+
+<div id="loginMsg" class="msg"></div>
+
+</section>
+
+
+<!-- 後台 -->
+<section id="app" class="hidden">
+
+<div class="card">
+
+<div class="toolbar">
+
+<div>
+<strong id="count">0</strong> 個菜品
+</div>
+
+<button onclick="newItem()">＋ 新增菜品</button>
+
+</div>
+
+<div class="row" style="margin-top:10px">
+
+<select id="catFilter" onchange="render()">
+<option value="">全部分類</option>
+</select>
+
+<input
+ id="search"
+ placeholder="搜尋菜名"
+ oninput="render()">
+
+</div>
+
+</div>
+
+<div id="list"></div>
+
+</section>
+
+</main>
+
+
+<!-- 編輯視窗 -->
+
+<div id="modal" class="modal">
+
+<div class="modalbox">
+
+<h2 id="modalTitle">編輯菜品</h2>
+
+<div class="field">
+<label>分類</label>
+<select id="fcat"></select>
+</div>
+
+<div class="field">
+<label>菜品名稱</label>
+<input id="fname">
+</div>
+
+<div class="row">
+
+<div class="field">
+<label>售價</label>
+<input id="fprice" type="number">
+</div>
+
+<div class="field">
+<label>升級價格</label>
+<input id="fupgrade" type="number">
+</div>
+
+</div>
+
+<div class="field">
+<label>描述</label>
+<input id="fdesc">
+</div>
+
+<div class="field">
+<label>圖片網址</label>
+<input id="fimg">
+</div>
+
+<div class="field">
+<label>排序</label>
+<input id="fsort" type="number">
+</div>
+
+<label class="check">
+<input id="factive" type="checkbox">
+上架販售
+</label>
+
+<div class="actions">
+
+<button class="gray" onclick="closeModal()">取消</button>
+
+<button onclick="saveItem()">💾 儲存</button>
+
+</div>
+
+</div>
+</div>
+
+
+<script>
+
+const API =
+"https://tctjonrbvvfntiqzmdnp.supabase.co/functions/v1/menu-admin-api";
+
+let pin = "";
+
+let data = {
+ categories:[],
+ items:[]
+};
+
+let editing = null;
+
+
+/* API */
+
+async function api(body){
+
+ const r = await fetch(API,{
+   method:"POST",
+   headers:{
+     "Content-Type":"application/json",
+     "x-admin-pin":pin
+   },
+   body:JSON.stringify(body)
+ });
+
+ let d={};
+
+ try{
+   d=await r.json();
+ }catch(e){}
+
+ if(!r.ok || !d.ok){
+   throw new Error(d.error || "連線失敗");
+ }
+
+ return d;
+}
+
+
+/* 登入 */
+
+async function login(){
+
+ pin=document.getElementById("pin").value.trim();
+
+ if(pin.length!==8){
+
+   document.getElementById("loginMsg").textContent=
+   "❌ 請輸入 8 位數 PIN";
+
+   return;
+ }
+
+ document.getElementById("loginMsg").textContent="連線中…";
+
+ try{
+
+   await load();
+
+   document
+   .getElementById("loginCard")
+   .classList.add("hidden");
+
+   document
+   .getElementById("app")
+   .classList.remove("hidden");
+
+ }catch(e){
+
+   document.getElementById("loginMsg").textContent=
+   "❌ PIN 不正確或後台連線失敗";
+
+ }
+
+}
+
+
+/* 讀取菜單 */
+
+async function load(){
+
+ data=await api({
+   action:"list"
+ });
+
+ const s=document.getElementById("catFilter");
+
+ s.innerHTML=
+ '<option value="">全部分類</option>'+
+
+ data.categories.map(c=>
+   `<option value="${c.id}">
+    ${esc(c.name)}
+   </option>`
+ ).join("");
+
+ render();
+
+}
+
+
+/* 顯示菜單 */
+
+function render(){
+
+ const q=
+ document.getElementById("search")
+ .value
+ .trim()
+ .toLowerCase();
+
+ const cat=
+ document.getElementById("catFilter")
+ .value;
+
+ const items=
+ data.items.filter(x=>
+   (!cat || x.category_id===cat) &&
+   (!q ||
+    String(x.name)
+    .toLowerCase()
+    .includes(q))
+ );
+
+ document.getElementById("count").textContent=
+ items.length;
+
+ const groups={};
+
+ items.forEach(x=>{
+
+   if(!groups[x.category_id])
+     groups[x.category_id]=[];
+
+   groups[x.category_id].push(x);
+
+ });
+
+ let html="";
+
+ data.categories.forEach(c=>{
+
+   if(!groups[c.id]) return;
+
+   html+=
+   `<div class="category">
+      ${esc(c.name)}
+    </div>`;
+
+   groups[c.id].forEach(x=>{
+     html+=itemHtml(x);
+   });
+
+ });
+
+ document.getElementById("list").innerHTML=
+ html ||
+ '<div class="card">沒有符合的菜品</div>';
+
+}
+
+
+/* 菜品 */
+
+function itemHtml(x){
+
+ return `
+ <div class="card item">
+
+   <div class="itemtop">
+
+     <div>
+
+       <div class="name">
+
+         ${esc(x.name)}
+
+         ${
+           x.active
+           ? '<span class="tag">上架</span>'
+           : '<span class="tag off">下架</span>'
+         }
+
+       </div>
+
+       <div class="desc">
+         ${esc(x.description || "")}
+       </div>
+
+     </div>
+
+     <div class="price">
+       $${Number(x.price || 0)}
+     </div>
+
+   </div>
+
+   <div class="actions">
+
+     <button onclick="editItem('${x.id}')">
+       ✏️ 編輯
+     </button>
+
+     <button
+       class="${x.active?'dark':'gray'}"
+       onclick="toggleItem('${x.id}')">
+
+       ${x.active?'下架':'上架'}
+
+     </button>
+
+   </div>
+
+ </div>
+ `;
+
+}
+
+
+/* 新增 */
+
+function newItem(){
+
+ editing=null;
+
+ document.getElementById("modalTitle").textContent=
+ "➕ 新增菜品";
+
+ fillCats();
+
+ document.getElementById("fname").value="";
+ document.getElementById("fprice").value="";
+ document.getElementById("fupgrade").value="";
+ document.getElementById("fdesc").value="";
+ document.getElementById("fimg").value="";
+ document.getElementById("fsort").value="99";
+ document.getElementById("factive").checked=true;
+
+ document.getElementById("modal").style.display="flex";
+
+}
+
+
+/* 編輯 */
+
+function editItem(id){
+
+ editing=
+ data.items.find(x=>x.id===id);
+
+ if(!editing) return;
+
+ document.getElementById("modalTitle").textContent=
+ "✏️ 編輯菜品";
+
+ fillCats();
+
+ document.getElementById("fcat").value=
+ editing.category_id;
+
+ document.getElementById("fname").value=
+ editing.name || "";
+
+ document.getElementById("fprice").value=
+ editing.price || 0;
+
+ document.getElementById("fupgrade").value=
+ editing.upgrade_price ?? "";
+
+ document.getElementById("fdesc").value=
+ editing.description || "";
+
+ document.getElementById("fimg").value=
+ editing.image_url || "";
+
+ document.getElementById("fsort").value=
+ editing.sort_order ?? 0;
+
+ document.getElementById("factive").checked=
+ !!editing.active;
+
+ document.getElementById("modal").style.display="flex";
+
+}
+
+
+/* 分類 */
+
+function fillCats(){
+
+ document.getElementById("fcat").innerHTML=
+ data.categories.map(c=>
+ `<option value="${c.id}">
+   ${esc(c.name)}
+ </option>`
+ ).join("");
+
+}
+
+
+/* 儲存 */
+
+async function saveItem(){
+
+ const b={
+
+   action:
+     editing
+     ? "update_item"
+     : "create_item",
+
+   category_id:
+     document.getElementById("fcat").value,
+
+   name:
+     document.getElementById("fname").value,
+
+   price:
+     document.getElementById("fprice").value,
+
+   upgrade_price:
+     document.getElementById("fupgrade").value,
+
+   description:
+     document.getElementById("fdesc").value,
+
+   image_url:
+     document.getElementById("fimg").value,
+
+   sort_order:
+     document.getElementById("fsort").value,
+
+   active:
+     document.getElementById("factive").checked
+
+ };
+
+ if(editing)
+   b.id=editing.id;
+
+ try{
+
+   await api(b);
+
+   closeModal();
+
+   await load();
+
+   alert("✅ 菜品已儲存");
+
+ }catch(e){
+
+   alert("❌ "+e.message);
+
+ }
+
+}
+
+
+/* 上架 / 下架 */
+
+async function toggleItem(id){
+
+ const x=
+ data.items.find(i=>i.id===id);
+
+ if(!x) return;
+
+ if(!confirm(
+   (x.active?"確定下架「":"確定上架「")
+   +x.name+"」？"
+ )) return;
+
+ try{
+
+   await api({
+
+     action:"update_item",
+
+     id:x.id,
+
+     name:x.name,
+
+     price:x.price,
+
+     upgrade_price:x.upgrade_price,
+
+     description:x.description,
+
+     image_url:x.image_url,
+
+     sort_order:x.sort_order,
+
+     active:!x.active
+
+   });
+
+   await load();
+
+ }catch(e){
+
+   alert("❌ "+e.message);
+
+ }
+
+}
+
+
+/* 關閉 */
+
+function closeModal(){
+
+ document.getElementById("modal")
+ .style.display="none";
+
+}
+
+
+/* 防止 HTML 注入 */
+
+function esc(s){
+
+ return String(s ?? "")
+ .replace(/&/g,"&amp;")
+ .replace(/</g,"&lt;")
+ .replace(/>/g,"&gt;")
+ .replace(/"/g,"&quot;")
+ .replace(/'/g,"&#039;");
+
+}
+
+
+/* Enter 登入 */
+
+document
+.getElementById("pin")
+.addEventListener("keydown",e=>{
+
+ if(e.key==="Enter")
+   login();
+
+});
+
+</script>
+
+</body>
+</html>
